@@ -19,7 +19,7 @@ func TestSetBit(t *testing.T) {
 	offsets = offsets[0 : size/5]
 	// set bit
 	offsetMap := make(map[int64]struct{})
-	bm := New()
+	bm := NewBitmap()
 	for _, offset := range offsets {
 		offsetMap[offset] = struct{}{}
 		bm.SetBit(offset, 1)
@@ -34,7 +34,7 @@ func TestSetBit(t *testing.T) {
 		}
 	}
 
-	bm2 := New()
+	bm2 := NewBitmap()
 	bm2.SetBit(15, 1)
 	if bm2.GetBit(15) != 1 {
 		t.Error("wrong value")
@@ -59,7 +59,7 @@ func TestFromBytes(t *testing.T) {
 }
 
 func TestForEachBit(t *testing.T) {
-	bm := New()
+	bm := NewBitmap()
 	for i := 0; i < 1000; i++ {
 		if i%2 == 0 {
 			bm.SetBit(int64(i), 1)
@@ -81,7 +81,7 @@ func TestForEachBit(t *testing.T) {
 	if count != 100 {
 		t.Error("wrong count")
 	}
-	bm = New()
+	bm = NewBitmap()
 	size := 1000
 	offsets := make([]int64, size)
 	for i := 0; i < size; i++ {
@@ -115,7 +115,7 @@ func TestForEachBit(t *testing.T) {
 }
 
 func TestBitMap_ForEachByte(t *testing.T) {
-	bm := New()
+	bm := NewBitmap()
 	for i := 0; i < 1000; i++ {
 		if i%16 == 0 {
 			bm.SetBit(int64(i), 1)
