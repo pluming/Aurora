@@ -17,7 +17,7 @@ type Element struct {
 
 type Level struct {
 	forward *Node
-	span    uint64
+	span    int64
 }
 
 type Node struct {
@@ -33,14 +33,14 @@ type skipList struct {
 
 	level int16
 
-	length uint64
+	length int64
 }
 
 func (sl *skipList) Level() int16 {
 	return sl.level
 }
 
-func (sl *skipList) Length() uint64 {
+func (sl *skipList) Length() int64 {
 	return sl.length
 }
 
@@ -84,7 +84,7 @@ func randomLevel() int16 {
 
 func (sl *skipList) Insert(member string, score float64) *Node {
 	update := make([]*Node, maxLevel)
-	rank := make([]uint64, maxLevel)
+	rank := make([]int64, maxLevel)
 
 	node := sl.header
 	for i := sl.level - 1; i >= 0; i-- {
@@ -99,8 +99,8 @@ func (sl *skipList) Insert(member string, score float64) *Node {
 			for node.level[i].forward != nil &&
 				(node.level[i].forward.Score < score ||
 					(node.level[i].forward.Score == score && node.level[i].forward.Member < member)) {
-				node = node.level[i].forward
 				rank[i] += node.level[i].span
+				node = node.level[i].forward
 			}
 		}
 		update[i] = node
@@ -111,7 +111,6 @@ func (sl *skipList) Insert(member string, score float64) *Node {
 		for i := sl.level; i < level; i++ {
 			rank[i] = 0
 			update[i] = sl.header
-			update[i] = sl.header
 			update[i].level[i].span = sl.length
 		}
 		sl.level = level
@@ -121,7 +120,10 @@ func (sl *skipList) Insert(member string, score float64) *Node {
 		node.level[i].forward = update[i].level[i].forward
 		update[i].level[i].forward = node
 		node.level[i].span = update[i].level[i].span - (rank[0] - rank[i])
-		update[i].level[i].span = rank[0] - rank[i] + 1
+		update[i].level[i].span = (rank[0] - rank[i]) + 1
+		if rank[0]-rank[i] < 0 {
+			panic("fsadfasdfas")
+		}
 	}
 	//inc +1  untouched level
 	for i := level; i < sl.level; i++ {
@@ -193,19 +195,38 @@ func (sl *skipList) removeNode(n *Node, update []*Node) {
 	sl.length--
 }
 
-func (sl *skipList) GetRank(member string, score float64) uint64 {
-	var rank uint64
+// GetRank 0 not found ;rank return
+func (sl *skipList) GetRank(member string, score float64) int64 {
+	var rank int64
 	node := sl.header
-	for i := int16(0); i >= 0; i-- {
+	for i := sl.level - 1; i >= 0; i-- {
 		for node.level[i].forward != nil &&
 			(node.level[i].forward.Score < score ||
-				(node.level[i].forward.Score == score && node.level[i].forward.Member < member)) {
-			node = node.level[i].forward
+				(node.level[i].forward.Score == score && node.level[i].forward.Member <= member)) {
 			rank += node.level[i].span
+			node = node.level[i].forward
 		}
 		if node.Member == member {
 			return rank
 		}
 	}
 	return 0
+}
+
+// GetByRank 1-based rank
+// GetByRank nil not found
+func (sl *skipList) GetByRank(rank int64) *Node {
+	var r int64
+	node := sl.header
+	// traverse sl; scan from top level
+	for i := sl.level - 1; i >= 0; i-- {
+		for node.level[i].forward != nil && (r+node.level[i].span) <= rank {
+			r += node.level[i].span
+			node = node.level[i].forward
+		}
+		if r == rank {
+			return node
+		}
+	}
+	return nil
 }

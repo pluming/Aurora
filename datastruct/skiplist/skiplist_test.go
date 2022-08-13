@@ -5,15 +5,15 @@ import (
 	"testing"
 )
 
-func TestInsert(t *testing.T) {
-	l := 200000
+func TestNormalSkip(t *testing.T) {
+	l := 20
 	sl := MakeSkipList()
-	for i := 0; i < 200000; i++ {
-		m := fmt.Sprintf("m%d", i)
-		sl.Insert(m, float64(i))
+	for i := 0; i < l; i++ {
+		m := fmt.Sprintf("m%d", i+1)
+		sl.Insert(m, float64(i+1))
 
 	}
-	if sl.Length() != uint64(l) {
+	if sl.Length() != int64(l) {
 		t.Fatal("Length unMatch")
 	}
 
@@ -21,17 +21,34 @@ func TestInsert(t *testing.T) {
 		t.Fatal("Level more than 16")
 	}
 
-	deleted := 100
+	t1 := fmt.Sprintf("m%d", 10)
+	rank100 := sl.GetRank(t1, 10)
+	if rank100 != 10 {
+		t.Fatal("rank UnMatch")
+	}
+
+	tr := 6
+	rank101Node := sl.GetByRank(int64(tr))
+	if rank101Node == nil {
+		t.Fatal("rank101Node fail")
+	}
+
+	if rank101Node.Score != float64(tr) {
+		t.Fatal("rank101Node Score not eq 101")
+	}
+
+	deleted := 10
 	for i := 0; i < deleted; i++ {
-		m := fmt.Sprintf("m%d", i)
-		sl.Remove(m, float64(i))
+		m := fmt.Sprintf("m%d", i+1)
+		sl.Remove(m, float64(i+1))
 	}
-	if sl.Length() != uint64(l)-uint64(deleted) {
+	if sl.Length() != int64(l)-int64(deleted) {
 		t.Fatal("Length unMatch")
 	}
 
 	if sl.Level() > maxLevel {
 		t.Fatal("Level more than 16")
 	}
+
 	t.Log(sl)
 }
