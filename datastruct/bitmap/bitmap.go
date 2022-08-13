@@ -30,9 +30,9 @@ func (b *bitmap) ToBytes() []byte {
 	return *b
 }
 
-func (b *bitmap) GetBit(offset int64) int {
-	bytesIndex := offset >> 8
-	bitIndex := offset % 3
+func (b *bitmap) GetBit(offset int64) byte {
+	bytesIndex := offset >> 3
+	bitIndex := offset % 8
 	if bytesIndex > int64(len(*b)) {
 		return 0
 	}
