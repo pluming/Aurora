@@ -2,27 +2,9 @@ package router
 
 import (
 	"strings"
-
-	"github.com/pluming/aurora/internal/client"
-	"github.com/pluming/aurora/internal/database/single_db"
 )
 
 var cmdTable = make(map[string]*command)
-
-// ExecFunc is IDB for command Executor
-// args don't include cmd line
-type ExecFunc func(db *single_db.DB, args [][]byte) client.Reply
-
-// PreFunc analyses command line when queued command to `multi`
-// returns related write keys and read keys
-type PreFunc func(args [][]byte) ([]string, []string)
-
-// CmdLine is alias for [][]byte, represents a command line
-type CmdLine = [][]byte
-
-// UndoFunc returns Undo logs for the given command line
-// execute from head to tail when Undo
-type UndoFunc func(db *single_db.DB, args [][]byte) []CmdLine
 
 type command struct {
 	Executor ExecFunc
@@ -41,7 +23,7 @@ const (
 // Arity means allowed number of cmdArgs, Arity < 0 means len(args) >= -Arity.
 // for example: the Arity of `get` is 2, `mget` is -2
 func RegisterCommand(name string, executor ExecFunc, prepare PreFunc, rollback UndoFunc, arity int, flags int) {
-	name = strings.ToLower(name)
+	name = strings.ToUpper(name)
 	cmdTable[name] = &command{
 		Executor: executor,
 		Prepare:  prepare,

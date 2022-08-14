@@ -3,14 +3,14 @@ package common_router
 import (
 	"github.com/pluming/aurora/config"
 	"github.com/pluming/aurora/internal/client"
+	"github.com/pluming/aurora/internal/database/IDB"
 	"github.com/pluming/aurora/internal/database/consts"
 	"github.com/pluming/aurora/internal/database/protocol"
 	"github.com/pluming/aurora/internal/database/router"
-	"github.com/pluming/aurora/internal/database/single_db"
 )
 
 // Ping the server
-func Ping(db *single_db.DB, args [][]byte) client.Reply {
+func Ping(db IDB.DBInstance, args [][]byte) client.Reply {
 	if len(args) == 0 {
 		return &protocol.PongReply{}
 	} else if len(args) == 1 {

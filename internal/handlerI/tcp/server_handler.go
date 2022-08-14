@@ -24,13 +24,13 @@ var (
 // Handler implements tcp.Handler and serves as a redis server
 type Handler struct {
 	activeConn sync.Map // *client -> placeholder
-	db         IDB.DB
+	dbServer   IDB.DBServer
 	closing    atomic.Boolean // refusing new client and new request
 }
 
 func (h *Handler) closeClient(client client.Connection) {
 	_ = client.Close()
-	h.db.AfterClientClose(client)
+	h.dbServer.AfterClientClose(client)
 	h.activeConn.Delete(client)
 }
 
@@ -74,7 +74,7 @@ func (h *Handler) Handle(ctx context.Context, conn net.Conn) {
 			logger.Error("require multi bulk protocol")
 			continue
 		}
-		result := h.db.Exec(cli, r.Args)
+		result := h.dbServer.Exec(cli, r.Args)
 		if result != nil {
 			_ = cli.Write(result.ToBytes())
 		} else {
@@ -94,15 +94,15 @@ func (h *Handler) Close() error {
 		h.closeClient(cli)
 		return true
 	})
-	h.db.Close()
+	h.dbServer.Close()
 	return nil
 }
 
 // MakeHandler creates a Handler instance
 func MakeHandler() *Handler {
-	var db IDB.DB
+	var db IDB.DBServer
 	db = standalone.NewServer()
 	return &Handler{
-		db: db,
+		dbServer: db,
 	}
 }

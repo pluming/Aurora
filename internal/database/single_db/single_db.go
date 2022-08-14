@@ -39,12 +39,13 @@ func (db *DB) SetIndex(index int) {
 }
 
 // MakeDB create DB instance
-func MakeDB() *DB {
+func MakeDB(index int) *DB {
 	db := &DB{
 		data:       dict.MakeConcurrent(dataDictSize),
 		ttlMap:     dict.MakeConcurrent(ttlDictSize),
 		versionMap: dict.MakeConcurrent(dataDictSize),
 		locker:     lock.Make(lockerSize),
+		index:      index,
 		//addAof:     func(line CmdLine) {},
 	}
 	return db
@@ -68,10 +69,10 @@ func (db *DB) Exec(client client.Connection, cmdLine [][]byte) client.Reply {
 		return protocol.MakeQueuedReply()
 	}
 	//normal command
-	return db.execNormalCommand(cmdLine)
+	return db.ExecNormalCommand(cmdLine)
 }
 
-func (db *DB) execNormalCommand(cmdLine [][]byte) client.Reply {
+func (db *DB) ExecNormalCommand(cmdLine [][]byte) client.Reply {
 	cmdName := strings.ToUpper(string(cmdLine[0]))
 	cmd, ok := router.GetCmdCommand(cmdName)
 	if !ok {

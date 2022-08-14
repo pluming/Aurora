@@ -17,9 +17,11 @@ var banner = `
 \____/\____/\__,_/_/____/
 `
 
+const Name = "aurora"
+
 var defaultProperties = &config.ServerProperties{
 	Bind:           "0.0.0.0",
-	Port:           6399,
+	Port:           6389,
 	AppendOnly:     false,
 	AppendFilename: "",
 	MaxClients:     1000,
@@ -34,7 +36,7 @@ func main() {
 	print(banner)
 	logger.Setup(&logger.Settings{
 		Path:       "logs",
-		Name:       "godis",
+		Name:       Name,
 		Ext:        "log",
 		TimeFormat: "2006-01-02",
 	})

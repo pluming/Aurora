@@ -8,6 +8,7 @@ import (
 
 	"github.com/pluming/aurora/config"
 	"github.com/pluming/aurora/internal/client"
+	"github.com/pluming/aurora/internal/database/IDB"
 	"github.com/pluming/aurora/internal/database/common_router"
 	"github.com/pluming/aurora/internal/database/consts"
 	"github.com/pluming/aurora/internal/database/protocol"
@@ -27,13 +28,13 @@ func NewServer() *MultiDB {
 		dbSet: make([]*atomic.Value, config.Properties.Databases),
 	}
 	for i := range mdb.dbSet {
-		singleDB := single_db.MakeDB()
-		singleDB.SetIndex(i)
+		singleDB := single_db.MakeDB(i)
+		//singleDB.SetIndex(i)
 		holder := &atomic.Value{}
 		holder.Store(singleDB)
 		mdb.dbSet[i] = holder
 	}
-	return nil
+	return mdb
 }
 
 // Exec executes command
@@ -101,18 +102,11 @@ func (mdb *MultiDB) AfterClientClose(c client.Connection) {
 	//pubsub.UnsubscribeAll(mdb.hub, c)
 }
 
-func (mdb *MultiDB) selectDb(dbIndex int) (*single_db.DB, *protocol.StandardErrReply) {
-	if dbIndex < 0 || dbIndex >= len(mdb.dbSet) {
-		return nil, protocol.MakeErrReply("ERR DB index out of range!")
-	}
-	return mdb.dbSet[dbIndex].Load().(*single_db.DB), nil
-}
-
-func (mdb *MultiDB) selectDB(dbIndex int) (*single_db.DB, *protocol.StandardErrReply) {
+func (mdb *MultiDB) selectDB(dbIndex int) (IDB.DBInstance, *protocol.StandardErrReply) {
 	if dbIndex >= len(mdb.dbSet) || dbIndex < 0 {
 		return nil, protocol.MakeErrReply("ERR DB index is out of range")
 	}
-	return mdb.dbSet[dbIndex].Load().(*single_db.DB), nil
+	return mdb.dbSet[dbIndex].Load().(IDB.DBInstance), nil
 }
 
 // Close graceful shutdown database
