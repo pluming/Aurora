@@ -7,7 +7,7 @@ import (
 )
 
 /*
- * ScoreBorder is a struct represents `min` `max` parameter of redis command `ZRANGEBYSCORE`
+ * ScoreBorder is a struct represents `min` `max` parameter of client command `ZRANGEBYSCORE`
  * can accept:
  *   int or float value, such as 2.718, 2, -2.718, -2 ...
  *   exclusive int or float value, such as (2.718, (2, (-2.718, (-2 ...
@@ -63,7 +63,7 @@ var NegativeInfBorder = &ScoreBorder{
 	Value: math.MinInt64,
 }
 
-// ParseScoreBorder creates ScoreBorder from redis arguments
+// ParseScoreBorder creates ScoreBorder from client arguments
 func ParseScoreBorder(s string) (*ScoreBorder, error) {
 	if s == "inf" || s == "+inf" {
 		return PositiveInfBorder, nil

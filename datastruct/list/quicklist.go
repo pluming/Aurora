@@ -5,10 +5,10 @@ import "container/list"
 // pageSize must be even
 const pageSize = 1024
 
-// QuickList is a linked list of page (which type is []interface{})
+// QuickList is a linked list of page (which type is []IDB{})
 // QuickList has better performance than LinkedList of Add, Range and memory usage
 type QuickList struct {
-	data *list.List // list of []interface{}
+	data *list.List // list of []IDB{}
 	size int
 }
 
