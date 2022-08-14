@@ -2,6 +2,7 @@ package skiplist
 
 import (
 	"errors"
+	"math"
 	"strconv"
 )
 
@@ -52,21 +53,23 @@ func (border *ScoreBorder) less(value float64) bool {
 	return border.Value <= value
 }
 
-var positiveInfBorder = &ScoreBorder{
-	Inf: positiveInf,
+var PositiveInfBorder = &ScoreBorder{
+	Inf:   positiveInf,
+	Value: math.MaxInt64,
 }
 
-var negativeInfBorder = &ScoreBorder{
-	Inf: negativeInf,
+var NegativeInfBorder = &ScoreBorder{
+	Inf:   negativeInf,
+	Value: math.MinInt64,
 }
 
 // ParseScoreBorder creates ScoreBorder from redis arguments
 func ParseScoreBorder(s string) (*ScoreBorder, error) {
 	if s == "inf" || s == "+inf" {
-		return positiveInfBorder, nil
+		return PositiveInfBorder, nil
 	}
 	if s == "-inf" {
-		return negativeInfBorder, nil
+		return NegativeInfBorder, nil
 	}
 	if s[0] == '(' {
 		value, err := strconv.ParseFloat(s[1:], 64)

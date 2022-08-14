@@ -41,5 +41,28 @@ func TestNormalZSet(t *testing.T) {
 		t.Fatalf("expect:%v but:%v", float64(l), element.Score)
 	}
 
+	count := zs.Count(skiplist.NegativeInfBorder, skiplist.PositiveInfBorder)
+	t.Log(count)
+	if count != zs.Len() {
+		t.Fatalf("zs.Count expect:%v but:%v", zs.Len(), count)
+	}
+
+	var firstN int64 = 10
+	count2 := zs.Count(&skiplist.ScoreBorder{Value: float64(firstN)}, skiplist.PositiveInfBorder)
+	t.Log(count2)
+	if count2 != int64(zs.Len()-firstN+1) {
+		t.Fatalf("zs.Count2 expect:%v but:%v", zs.Len(), count2)
+	}
+
+	var cc int64 = firstN
+	zs.ForEachByScore(&skiplist.ScoreBorder{Value: float64(firstN)}, skiplist.PositiveInfBorder, 0, 10, false, func(element *skiplist.Element) bool {
+		t.Log(element.Member)
+		if element.Score != float64(cc) {
+			t.Fatalf("zs.ForEachByScore expect:%v but:%v", float64(cc), element.Score)
+		}
+		cc++
+		return true
+	})
+
 	t.Log(zs)
 }

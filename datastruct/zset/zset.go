@@ -135,6 +135,7 @@ func (zs *ZSet) Count(min *skiplist.ScoreBorder, max *skiplist.ScoreBorder) int6
 	return c
 }
 
+// ForEachByScore offset : 0-base
 // ForEachByScore visits members which score within the given border
 func (zs *ZSet) ForEachByScore(min, max *skiplist.ScoreBorder, offset, limit int64, desc bool, cb func(element *skiplist.Element) bool) {
 	if offset < 0 {
@@ -159,11 +160,14 @@ func (zs *ZSet) ForEachByScore(min, max *skiplist.ScoreBorder, offset, limit int
 	}
 	var c int64
 	zs.ForEach(start, stop, desc, func(element *skiplist.Element) bool {
-		if limit < 0 || c > limit {
+		if limit < 0 || c >= limit {
 			return false
 		}
 		c++
 		if !cb(element) {
+			return false
+		}
+		if c == limit {
 			return false
 		}
 		return true
