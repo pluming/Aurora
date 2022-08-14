@@ -1,6 +1,6 @@
 package set
 
-import "github.com/hdt3213/godis/datastruct/dict"
+import "github.com/pluming/aurora/datastruct/dict"
 
 // Set is a set of elements based on hash table
 type Set struct {

@@ -87,12 +87,14 @@ func (dict *SimpleDict) ForEach(consumer Consumer) {
 
 // RandomKeys randomly returns keys of the given number, may contain duplicated key
 func (dict *SimpleDict) RandomKeys(limit int) []string {
-	result := make([]string, limit)
-	for i := 0; i < limit; i++ {
-		for k := range dict.m {
-			result[i] = k
-			break
+	result := make([]string, 0, limit)
+	i := 0
+	for k := range dict.m {
+		if i < limit {
+			i++
+			result = append(result, k)
 		}
+		break
 	}
 	return result
 }

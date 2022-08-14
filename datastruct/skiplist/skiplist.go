@@ -16,31 +16,31 @@ type Element struct {
 }
 
 type Level struct {
-	forward *Node
+	Forward *Node
 	span    int64
 }
 
 type Node struct {
 	Element
-	backward *Node
-	level    []*Level
+	Backward *Node
+	Level    []*Level
 }
 
-type skipList struct {
-	header *Node
+type SkipList struct {
+	Header *Node
 
-	tail *Node
+	Tail *Node
 
 	level int16
 
 	length int64
 }
 
-func (sl *skipList) Level() int16 {
+func (sl *SkipList) Level() int16 {
 	return sl.level
 }
 
-func (sl *skipList) Length() int64 {
+func (sl *SkipList) Length() int64 {
 	return sl.length
 }
 
@@ -50,17 +50,17 @@ func MakeNode(member string, score float64, level int16) *Node {
 			Member: member,
 			Score:  score,
 		},
-		level: make([]*Level, level),
+		Level: make([]*Level, level),
 	}
 	for i := 0; i < int(level); i++ {
-		n.level[i] = &Level{}
+		n.Level[i] = &Level{}
 	}
 	return n
 }
 
-func MakeSkipList() *skipList {
-	sl := &skipList{
-		header: MakeNode("", 0, maxLevel),
+func MakeSkipList() *SkipList {
+	sl := &SkipList{
+		Header: MakeNode("", 0, maxLevel),
 		level:  1,
 	}
 	return sl
@@ -82,11 +82,11 @@ func randomLevel() int16 {
 	return level
 }
 
-func (sl *skipList) Insert(member string, score float64) *Node {
+func (sl *SkipList) Insert(member string, score float64) *Node {
 	update := make([]*Node, maxLevel)
 	rank := make([]int64, maxLevel)
 
-	node := sl.header
+	node := sl.Header
 	for i := sl.level - 1; i >= 0; i-- {
 		if i == sl.level-1 {
 			rank[i] = 0
@@ -94,71 +94,71 @@ func (sl *skipList) Insert(member string, score float64) *Node {
 			rank[i] = rank[i+1] //starting store last rank
 		}
 
-		if node.level[i] != nil {
-			//level traverse the skipList
-			for node.level[i].forward != nil &&
-				(node.level[i].forward.Score < score ||
-					(node.level[i].forward.Score == score && node.level[i].forward.Member < member)) {
-				rank[i] += node.level[i].span
-				node = node.level[i].forward
+		if node.Level[i] != nil {
+			//Level traverse the SkipList
+			for node.Level[i].Forward != nil &&
+				(node.Level[i].Forward.Score < score ||
+					(node.Level[i].Forward.Score == score && node.Level[i].Forward.Member < member)) {
+				rank[i] += node.Level[i].span
+				node = node.Level[i].Forward
 			}
 		}
 		update[i] = node
 	}
 	level := randomLevel()
 	if level > sl.level {
-		//extend sk level
+		//extend sk Level
 		for i := sl.level; i < level; i++ {
 			rank[i] = 0
-			update[i] = sl.header
-			update[i].level[i].span = sl.length
+			update[i] = sl.Header
+			update[i].Level[i].span = sl.length
 		}
 		sl.level = level
 	}
 	node = MakeNode(member, score, level)
 	for i := int16(0); i < level; i++ {
-		node.level[i].forward = update[i].level[i].forward
-		update[i].level[i].forward = node
-		node.level[i].span = update[i].level[i].span - (rank[0] - rank[i])
-		update[i].level[i].span = (rank[0] - rank[i]) + 1
+		node.Level[i].Forward = update[i].Level[i].Forward
+		update[i].Level[i].Forward = node
+		node.Level[i].span = update[i].Level[i].span - (rank[0] - rank[i])
+		update[i].Level[i].span = (rank[0] - rank[i]) + 1
 		if rank[0]-rank[i] < 0 {
 			panic("fsadfasdfas")
 		}
 	}
-	//inc +1  untouched level
+	//inc +1  untouched Level
 	for i := level; i < sl.level; i++ {
-		update[i].level[i].span++
+		update[i].Level[i].span++
 	}
 	//update node bw
-	if update[0] == sl.header {
-		node.backward = nil
+	if update[0] == sl.Header {
+		node.Backward = nil
 	} else {
-		node.backward = update[0]
+		node.Backward = update[0]
 	}
-	//update node.forward
-	if node.level[0].forward != nil {
-		node.level[0].forward.backward = node
+	//update node.Forward
+	if node.Level[0].Forward != nil {
+		node.Level[0].Forward.Backward = node
 	} else {
-		sl.tail = node
+		sl.Tail = node
 	}
 	sl.length++
 	return nil
 }
 
 // Remove deleted and return true; otherwise false
-func (sl *skipList) Remove(member string, score float64) bool {
+func (sl *SkipList) Remove(member string, score float64) bool {
 	update := make([]*Node, maxLevel)
-	node := sl.header
+	node := sl.Header
 	for i := sl.level - 1; i >= 0; i-- {
-		for node.level[i].forward != nil &&
-			(node.level[i].forward.Score < score ||
-				(node.level[i].forward.Score == score && node.level[i].forward.Member < member)) {
-			node = node.level[i].forward
+		for node.Level[i].Forward != nil &&
+			(node.Level[i].Forward.Score < score ||
+				(node.Level[i].Forward.Score == score && node.Level[i].Forward.Member < member)) {
+			node = node.Level[i].Forward
 		}
 		update[i] = node
 	}
 
-	node = node.level[0].forward
+	node = node.Level[0].Forward
 	if node != nil && node.Score == score && node.Member == member {
 		sl.removeNode(node, update)
 		return true
@@ -169,42 +169,42 @@ func (sl *skipList) Remove(member string, score float64) bool {
 
 /*
 n: target node to delete
-update: backward node of target
+update: Backward node of target
 */
-func (sl *skipList) removeNode(n *Node, update []*Node) {
-	//update.level.forward=n.level.forward
+func (sl *SkipList) removeNode(n *Node, update []*Node) {
+	//update.Level.Forward=n.Level.Forward
 	for i := int16(0); i < sl.level; i++ {
-		if update[i].level[i].forward == n {
-			update[i].level[i].forward = n.level[i].forward
-			update[i].level[i].span += n.level[i].span - 1
+		if update[i].Level[i].Forward == n {
+			update[i].Level[i].Forward = n.Level[i].Forward
+			update[i].Level[i].span += n.Level[i].span - 1
 		} else {
-			update[i].level[i].span--
+			update[i].Level[i].span--
 		}
 	}
 
 	// not last
-	if n.level[0].forward != nil {
-		n.level[0].forward.backward = n.backward
+	if n.Level[0].Forward != nil {
+		n.Level[0].Forward.Backward = n.Backward
 	} else { //last
-		sl.tail = n.backward
+		sl.Tail = n.Backward
 	}
-	//desc -1 level
-	for sl.level > 1 && sl.header.level[sl.level-1].forward == nil {
+	//desc -1 Level
+	for sl.level > 1 && sl.Header.Level[sl.level-1].Forward == nil {
 		sl.level--
 	}
 	sl.length--
 }
 
 // GetRank 0 not found ;rank return
-func (sl *skipList) GetRank(member string, score float64) int64 {
+func (sl *SkipList) GetRank(member string, score float64) int64 {
 	var rank int64
-	node := sl.header
+	node := sl.Header
 	for i := sl.level - 1; i >= 0; i-- {
-		for node.level[i].forward != nil &&
-			(node.level[i].forward.Score < score ||
-				(node.level[i].forward.Score == score && node.level[i].forward.Member <= member)) {
-			rank += node.level[i].span
-			node = node.level[i].forward
+		for node.Level[i].Forward != nil &&
+			(node.Level[i].Forward.Score < score ||
+				(node.Level[i].Forward.Score == score && node.Level[i].Forward.Member <= member)) {
+			rank += node.Level[i].span
+			node = node.Level[i].Forward
 		}
 		if node.Member == member {
 			return rank
@@ -215,18 +215,18 @@ func (sl *skipList) GetRank(member string, score float64) int64 {
 
 // GetByRank 1-based rank
 // GetByRank nil not found
-func (sl *skipList) GetByRank(rank int64) *Node {
+func (sl *SkipList) GetByRank(rank int64) *Node {
 	// rank less 0 return
 	if rank <= 0 {
 		return nil
 	}
 	var r int64
-	node := sl.header
-	// traverse sl; scan from top level
+	node := sl.Header
+	// traverse sl; scan from top Level
 	for i := sl.level - 1; i >= 0; i-- {
-		for node.level[i].forward != nil && (r+node.level[i].span) <= rank {
-			r += node.level[i].span
-			node = node.level[i].forward
+		for node.Level[i].Forward != nil && (r+node.Level[i].span) <= rank {
+			r += node.Level[i].span
+			node = node.Level[i].Forward
 		}
 		if r == rank {
 			return node
@@ -235,60 +235,66 @@ func (sl *skipList) GetByRank(rank int64) *Node {
 	return nil
 }
 
-func (sl *skipList) GetFirstInScoreRange(min *ScoreBorder, max *ScoreBorder) *Node {
+// GetFirstInScoreRange 获取指定范围的Node ,返回rank; rank 1 base;-1 UnMatch
+func (sl *SkipList) GetFirstInScoreRange(min *ScoreBorder, max *ScoreBorder) (*Node, int64) {
+	var rank int64
 	if !sl.hasInRange(min, max) {
-		return nil
+		return nil, -1
 	}
-	node := sl.header
+	node := sl.Header
 	for i := sl.level - 1; i >= 0; i-- {
-		for node.level[i].forward != nil && !min.less(node.level[i].forward.Score) {
-			node = node.level[i].forward
+		for node.Level[i].Forward != nil && !min.less(node.Level[i].Forward.Score) {
+			rank += node.Level[i].span
+			node = node.Level[i].Forward
 		}
 	}
 
-	node = node.level[0].forward
+	node = node.Level[0].Forward
 	if node == nil {
-		return nil
+		return nil, -1
 	}
 	if !max.greater(node.Score) {
-		return nil
+		return nil, -1
 	}
-	return node
+	rank++
+	return node, rank
 }
 
-func (sl *skipList) getLastInScoreRange(min *ScoreBorder, max *ScoreBorder) *Node {
+func (sl *SkipList) GetLastInScoreRange(min *ScoreBorder, max *ScoreBorder) (*Node, int64) {
+	var rank int64
 	if !sl.hasInRange(min, max) {
-		return nil
+		return nil, -1
 	}
-	node := sl.header
-	// scan from top level
+	node := sl.Header
+	// scan from top Level
 	for level := sl.level - 1; level >= 0; level-- {
-		for node.level[level].forward != nil && max.greater(node.level[level].forward.Score) {
-			node = node.level[level].forward
+		for node.Level[level].Forward != nil && max.greater(node.Level[level].Forward.Score) {
+			rank += node.Level[level].span
+			node = node.Level[level].Forward
 		}
 	}
 
 	if node == nil {
-		return nil
+		return nil, -1
 	}
 	if !min.less(node.Score) {
-		return nil
+		return nil, -1
 	}
-	return node
+	return node, rank
 }
 
-func (sl *skipList) hasInRange(min *ScoreBorder, max *ScoreBorder) bool {
+func (sl *SkipList) hasInRange(min *ScoreBorder, max *ScoreBorder) bool {
 	if min.Value > max.Value || (min.Value == max.Value && (min.Exclude || max.Exclude)) {
 		return false
 	}
-	node := sl.tail
+	node := sl.Tail
 	//空表；
-	//min > tail
+	//min > Tail
 	if node == nil || !min.less(node.Score) {
 		return false
 	}
 	//max < min
-	node = sl.header.level[0].forward
+	node = sl.Header.Level[0].Forward
 	if node == nil || !max.greater(node.Score) {
 		return false
 	}
@@ -296,30 +302,30 @@ func (sl *skipList) hasInRange(min *ScoreBorder, max *ScoreBorder) bool {
 }
 
 // RemoveRangeByScore return removed elements
-func (sl *skipList) RemoveRangeByScore(min *ScoreBorder, max *ScoreBorder) (removed []*Element) {
+func (sl *SkipList) RemoveRangeByScore(min *ScoreBorder, max *ScoreBorder) (removed []*Element) {
 	update := make([]*Node, maxLevel)
 	removed = make([]*Element, 0)
-	// find backward nodes (of target range) or last node of each level
-	node := sl.header
+	// find Backward nodes (of target range) or last node of each Level
+	node := sl.Header
 	for i := sl.level - 1; i >= 0; i-- {
-		for node.level[i].forward != nil {
-			if min.less(node.level[i].forward.Score) { // already in range
+		for node.Level[i].Forward != nil {
+			if min.less(node.Level[i].Forward.Score) { // already in range
 				break
 			}
-			node = node.level[i].forward
+			node = node.Level[i].Forward
 		}
 		update[i] = node
 	}
 
 	// node is the first one within range
-	node = node.level[0].forward
+	node = node.Level[0].Forward
 
 	// remove nodes in range
 	for node != nil {
 		if !max.greater(node.Score) { // already out of range
 			break
 		}
-		next := node.level[0].forward
+		next := node.Level[0].Forward
 		removedElement := node.Element
 		removed = append(removed, &removedElement)
 		sl.removeNode(node, update)
@@ -329,27 +335,27 @@ func (sl *skipList) RemoveRangeByScore(min *ScoreBorder, max *ScoreBorder) (remo
 }
 
 // RemoveRangeByRank 1-based rank, including start, exclude stop
-func (sl *skipList) RemoveRangeByRank(start int64, stop int64) (removed []*Element) {
+func (sl *SkipList) RemoveRangeByRank(start int64, stop int64) (removed []*Element) {
 	var i int64 = 0 // rank of iterator
 	update := make([]*Node, maxLevel)
 	removed = make([]*Element, 0)
 
-	// scan from top level
-	node := sl.header
+	// scan from top Level
+	node := sl.Header
 	for level := sl.level - 1; level >= 0; level-- {
-		for node.level[level].forward != nil && (i+node.level[level].span) < start {
-			i += node.level[level].span
-			node = node.level[level].forward
+		for node.Level[level].Forward != nil && (i+node.Level[level].span) < start {
+			i += node.Level[level].span
+			node = node.Level[level].Forward
 		}
 		update[level] = node
 	}
 
 	i++
-	node = node.level[0].forward // first node in range
+	node = node.Level[0].Forward // first node in range
 
 	// remove nodes in range
 	for node != nil && i < stop {
-		next := node.level[0].forward
+		next := node.Level[0].Forward
 		removedElement := node.Element
 		removed = append(removed, &removedElement)
 		sl.removeNode(node, update)
