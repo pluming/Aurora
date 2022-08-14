@@ -64,5 +64,15 @@ func TestNormalZSet(t *testing.T) {
 		return true
 	})
 
+	var limit int64 = 10
+	rangeByScore := zs.RangeByScore(&skiplist.ScoreBorder{Value: float64(firstN)}, skiplist.PositiveInfBorder, 0, limit, false)
+
+	if int64(len(rangeByScore)) != limit {
+		t.Fatalf("zs.RangeByScore expect:%v but:%v", int64(len(rangeByScore)), limit)
+	}
+
+	//delCount := zs.RemoveByScore(&skiplist.ScoreBorder{Value: float64(1)}, &skiplist.ScoreBorder{Value: float64(firstN)})
+	delCount := zs.RemoveByRank(0, 10)
+	t.Log(delCount)
 	t.Log(zs)
 }
