@@ -39,6 +39,7 @@ func (border *ScoreBorder) greater(value float64) bool {
 	return border.Value >= value
 }
 
+//less Or maybe less and eq
 func (border *ScoreBorder) less(value float64) bool {
 	if border.Inf == negativeInf {
 		return true

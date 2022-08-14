@@ -216,6 +216,10 @@ func (sl *skipList) GetRank(member string, score float64) int64 {
 // GetByRank 1-based rank
 // GetByRank nil not found
 func (sl *skipList) GetByRank(rank int64) *Node {
+	// rank less 0 return
+	if rank <= 0 {
+		return nil
+	}
 	var r int64
 	node := sl.header
 	// traverse sl; scan from top level
@@ -229,4 +233,128 @@ func (sl *skipList) GetByRank(rank int64) *Node {
 		}
 	}
 	return nil
+}
+
+func (sl *skipList) GetFirstInScoreRange(min *ScoreBorder, max *ScoreBorder) *Node {
+	if !sl.hasInRange(min, max) {
+		return nil
+	}
+	node := sl.header
+	for i := sl.level - 1; i >= 0; i-- {
+		for node.level[i].forward != nil && !min.less(node.level[i].forward.Score) {
+			node = node.level[i].forward
+		}
+	}
+
+	node = node.level[0].forward
+	if node == nil {
+		return nil
+	}
+	if !max.greater(node.Score) {
+		return nil
+	}
+	return node
+}
+
+func (sl *skipList) getLastInScoreRange(min *ScoreBorder, max *ScoreBorder) *Node {
+	if !sl.hasInRange(min, max) {
+		return nil
+	}
+	node := sl.header
+	// scan from top level
+	for level := sl.level - 1; level >= 0; level-- {
+		for node.level[level].forward != nil && max.greater(node.level[level].forward.Score) {
+			node = node.level[level].forward
+		}
+	}
+
+	if node == nil {
+		return nil
+	}
+	if !min.less(node.Score) {
+		return nil
+	}
+	return node
+}
+
+func (sl *skipList) hasInRange(min *ScoreBorder, max *ScoreBorder) bool {
+	if min.Value > max.Value || (min.Value == max.Value && (min.Exclude || max.Exclude)) {
+		return false
+	}
+	node := sl.tail
+	//空表；
+	//min > tail
+	if node == nil || !min.less(node.Score) {
+		return false
+	}
+	//max < min
+	node = sl.header.level[0].forward
+	if node == nil || !max.greater(node.Score) {
+		return false
+	}
+	return true
+}
+
+// RemoveRangeByScore return removed elements
+func (sl *skipList) RemoveRangeByScore(min *ScoreBorder, max *ScoreBorder) (removed []*Element) {
+	update := make([]*Node, maxLevel)
+	removed = make([]*Element, 0)
+	// find backward nodes (of target range) or last node of each level
+	node := sl.header
+	for i := sl.level - 1; i >= 0; i-- {
+		for node.level[i].forward != nil {
+			if min.less(node.level[i].forward.Score) { // already in range
+				break
+			}
+			node = node.level[i].forward
+		}
+		update[i] = node
+	}
+
+	// node is the first one within range
+	node = node.level[0].forward
+
+	// remove nodes in range
+	for node != nil {
+		if !max.greater(node.Score) { // already out of range
+			break
+		}
+		next := node.level[0].forward
+		removedElement := node.Element
+		removed = append(removed, &removedElement)
+		sl.removeNode(node, update)
+		node = next
+	}
+	return removed
+}
+
+// RemoveRangeByRank 1-based rank, including start, exclude stop
+func (sl *skipList) RemoveRangeByRank(start int64, stop int64) (removed []*Element) {
+	var i int64 = 0 // rank of iterator
+	update := make([]*Node, maxLevel)
+	removed = make([]*Element, 0)
+
+	// scan from top level
+	node := sl.header
+	for level := sl.level - 1; level >= 0; level-- {
+		for node.level[level].forward != nil && (i+node.level[level].span) < start {
+			i += node.level[level].span
+			node = node.level[level].forward
+		}
+		update[level] = node
+	}
+
+	i++
+	node = node.level[0].forward // first node in range
+
+	// remove nodes in range
+	for node != nil && i < stop {
+		next := node.level[0].forward
+		removedElement := node.Element
+		removed = append(removed, &removedElement)
+		sl.removeNode(node, update)
+		node = next
+		i++
+	}
+	return removed
 }

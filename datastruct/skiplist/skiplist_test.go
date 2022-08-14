@@ -6,7 +6,7 @@ import (
 )
 
 func TestNormalSkip(t *testing.T) {
-	l := 20
+	l := 2000
 	sl := MakeSkipList()
 	for i := 0; i < l; i++ {
 		m := fmt.Sprintf("m%d", i+1)
@@ -21,20 +21,21 @@ func TestNormalSkip(t *testing.T) {
 		t.Fatal("Level more than 16")
 	}
 
-	t1 := fmt.Sprintf("m%d", 10)
-	rank100 := sl.GetRank(t1, 10)
-	if rank100 != 10 {
+	rank100Tmp := 100
+	t1 := fmt.Sprintf("m%d", rank100Tmp)
+	rank100 := sl.GetRank(t1, float64(rank100Tmp))
+	if rank100 != int64(rank100Tmp) {
 		t.Fatal("rank UnMatch")
 	}
 
-	tr := 6
+	tr := 600
 	rank101Node := sl.GetByRank(int64(tr))
 	if rank101Node == nil {
 		t.Fatal("rank101Node fail")
 	}
 
 	if rank101Node.Score != float64(tr) {
-		t.Fatal("rank101Node Score not eq 101")
+		t.Fatalf("rank101Node Score not eq %d", 600)
 	}
 
 	deleted := 10
